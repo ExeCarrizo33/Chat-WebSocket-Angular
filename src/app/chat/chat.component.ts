@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import { Client } from "@stomp/stompjs";
 import SockJS from 'sockjs-client';
 import {CommonModule, NgForOf, NgIf} from "@angular/common";
@@ -22,7 +22,11 @@ export class ChatComponent implements OnInit {
   mensaje: Mensaje = new Mensaje();
   mensajes: Mensaje[] = [];
 
-  constructor() {}
+  escribiendo: string = "";
+  clienteId: string;
+  constructor(private cdref: ChangeDetectorRef) {
+    this.clienteId = 'id-' + new Date().getTime() + '-' + Math.random().toString(36).substr(2);
+  }
 
   ngOnInit() {
     this.client.webSocketFactory = () => {
@@ -45,6 +49,23 @@ export class ChatComponent implements OnInit {
         console.log(mensaje);
       });
 
+
+      this.client.subscribe('/chat/escribiendo', e => {
+        this.escribiendo = e.body;
+        setTimeout(() => this.escribiendo = '',3000);
+      });
+
+      console.log(this.clienteId);
+      this.client.subscribe('/chat/historial/' + this.clienteId,e => {
+        const historial = JSON.parse(e.body) as Mensaje[];
+        this.mensajes = historial.map(m => {
+          m.fecha = new Date(m.fecha);
+          return m;
+        }).reverse();
+      });
+
+      this.client.publish({destination: '/app/historial', body: this.clienteId})
+
       this.mensaje.tipo = 'NUEVO_USUARIO';
       this.client.publish({destination: '/app/mensaje', body: JSON.stringify(this.mensaje)});
 
@@ -53,7 +74,13 @@ export class ChatComponent implements OnInit {
     this.client.onDisconnect = (frame) => {
       console.log('Desconectados: ' + !this.client.connected + ' : ' + frame);
       this.conectado = false;
+      this.mensaje = new Mensaje();
+      this.mensajes = [];
     };
+  }
+
+  ngAfterContentChecked() {
+    this.cdref.detectChanges();
   }
 
   conectar() {
@@ -68,5 +95,10 @@ export class ChatComponent implements OnInit {
     this.mensaje.tipo = 'MENSAJE';
     this.client.publish({destination: '/app/mensaje', body: JSON.stringify(this.mensaje)});
     this.mensaje.texto = '';
+  }
+
+  escribiendoEvento(){
+    this.client.publish({destination: '/app/escribiendo', body: this.mensaje.username});
+
   }
 }

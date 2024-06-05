@@ -1,36 +1,43 @@
-<div class="card mx-4 my-4">
-  <div class="card-header" >
-    <ul class="nav nav-pills card-header-pills">
-      <li class="nav-item mx-2" *ngIf="!conectado">
-        <input type="text" [(ngModel)]="mensaje.username" class="form-control  " placeholder="Tu Username..." name="username">
-      </li>
-      <li class="nav-item mx-2">
-        <button class="btn btn-success" type="button" (click)="conectar()" *ngIf="!conectado" [disabled]="!mensaje.username">Conectar</button>
-      </li>
-      <li class="nav-item">
-        <button class="btn btn-warning" type="button" (click)="desconectar()" *ngIf="conectado">Cerrar Chat</button>
-      </li>
-    </ul>
-  </div>
-  <div class="card-body" style="overflow-y: scroll; height: 360px;" *ngIf="conectado">
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item list-group-item-light"  *ngFor="let mensaje of mensajes">
-        <span *ngIf="mensaje.tipo == 'NUEVO_USUARIO'">
-          {{mensaje.fecha | date:'shortTime'}} &#64; {{ mensaje.texto }}
-          <span [ngStyle]="{'color': mensaje.color}" >{{mensaje.username}}</span></span>
-        <span *ngIf="mensaje.tipo == 'MENSAJE'">
-          {{mensaje.fecha | date:'shortTime'}}
-          <span [ngStyle]="{'color': mensaje.color}" >{{mensaje.username}}</span> dice:<br> {{ mensaje.texto }}</span>
-      </li>
-    </ul>
-  </div>
-
-  <div class="card-footer" *ngIf="conectado">
-    <form class="form-inline">
-      <div class="form-group mx-3">
-        <input type="text" [(ngModel)]="mensaje.texto" class="form-control  " placeholder="Escribe un mensaje..." name="texto">
-      </div>
-      <button class="btn btn-primary"  (click)="sendMessage()" type="submit">Enviar</button>
-    </form>
+<div class="container">
+  <div class="card my-4 shadow rounded-lg border-dark bg-dark text-white" style="width: 700px; margin: auto">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 text-white">Chat Room</h5>
+      <ul class="nav nav-pills card-header-pills mr-3">
+        <li class="nav-item mx-3" *ngIf="!conectado">
+          <input type="text" [(ngModel)]="mensaje.username" class="form-control text-white " placeholder="Username..." name="username">
+        </li>
+        <li class="nav-item" *ngIf="!conectado">
+          <button class="btn btn-success" type="button" (click)="conectar()" [disabled]="!mensaje.username">Connect</button>
+        </li>
+        <li class="nav-item" *ngIf="conectado">
+          <button class="btn btn-warning" type="button" (click)="desconectar()">Disconnect</button>
+        </li>
+      </ul>
+    </div>
+    <div #scrollChat [scrollTop]="scrollChat.scrollHeight" class="card-body overflow-auto py-2" style="height: 200px;" *ngIf="conectado">
+      <ul class="list-group list-group-flush chat-messages text-white">
+        <li class="list-group-item list-group-item-dark" *ngFor="let mensaje of mensajes">
+          <span *ngIf="mensaje.tipo == 'NUEVO_USUARIO'">
+            {{mensaje.fecha | date:'shortTime'}} &#64; {{ mensaje.texto }}
+            <span [ngStyle]="{'color': mensaje.color}">{{mensaje.username}}</span> (joined)
+          </span>
+          <span *ngIf="mensaje.tipo == 'MENSAJE'">
+            {{mensaje.fecha | date:'shortTime'}}
+            <span [ngStyle]="{'color': mensaje.color}">{{mensaje.username}}</span> says:<br>
+            {{ mensaje.texto }}
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div class="card-footer bg-dark d-flex align-items-center" *ngIf="conectado">
+      <form class="d-flex flex-grow-1 me-3">
+        <div class="form-group flex-grow-1">
+          <input type="text" [(ngModel)]="mensaje.texto" class="form-control  text-white" placeholder="Type a message..." name="texto"
+                 (keyup)="escribiendoEvento()">
+        </div>
+        <button class="btn btn-primary" (click)="sendMessage()" type="submit">Send</button>
+      </form>
+      <div class="mt-2 text-white">{{escribiendo}}</div>
+    </div>
   </div>
 </div>
